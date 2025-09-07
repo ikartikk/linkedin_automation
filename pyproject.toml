@@ -2,7 +2,7 @@
 name = "linkedin_automation"
 version = "0.1.0"
 description = "Automation tools for LinkedIn tasks."
-authors = ["Your Name <your.email@example.com>"]
+authors = Kartik Kumar (Kartik.capoor@gmail.com)
 
 [tool.setuptools]
 packages = ["src.linkedin_automation"]

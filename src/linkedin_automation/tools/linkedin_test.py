@@ -10,10 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def linkedin_poster_tool(post_text: str) -> str:
+def linkedin_poster_tool(post_data: dict) -> str:
     """
     Automates LinkedIn posting with Selenium (Chrome version).
-    Expects input as plain text (no image).
+    Expects input as a dict: {"text": "...", "image_path": "..."}.
     Requires LINKEDIN_EMAIL and LINKEDIN_PASSWORD in environment variables.
     """
     driver = None
@@ -22,7 +22,11 @@ def linkedin_poster_tool(post_text: str) -> str:
         linkedin_password = os.getenv("LINKEDIN_PASSWORD")
         if not linkedin_email or not linkedin_password:
             return "Error: Please set LINKEDIN_EMAIL and LINKEDIN_PASSWORD in environment."
+        if not isinstance(post_data, dict) or "text" not in post_data:
+            return "Error: post_data must be a dict with at least a 'text' key."
 
+        post_text = post_data.get("text", "")
+        image_path = post_data.get("image_path")
         # ✅ Chrome setup
         chrome_options = Options()
         chrome_options.add_argument("--start-maximized")
@@ -54,13 +58,30 @@ def linkedin_poster_tool(post_text: str) -> str:
         post_box = driver.find_element(By.XPATH, "//div[contains(@class,'ql-editor')]")
         post_box.send_keys(post_text)
         time.sleep(2)
+        print("Entered post text.")
+
+        add_media_btn = driver.find_element(By.XPATH, "//button[@aria-label='Add media']")
+        add_media_btn.click()
+        time.sleep(2)
+
+        # Find file input and send file path
+        file_input = driver.find_element(By.XPATH, "//input[@type='file']")
+        file_input.send_keys(os.path.abspath(image_path))
+
+        # Wait for upload preview
+        time.sleep(5)
+
+        next_button = driver.find_element(By.XPATH, "//button[@aria-label='Next']")
+        next_button.click()
+        time.sleep(2)
+
 
         # Post
         post_button = driver.find_element(By.XPATH, "//button[contains(@class,'share-actions__primary-action')]//span[text()='Post']")
         post_button.click()
         time.sleep(10)
 
-        return "✅ LinkedIn post (text only) published successfully."
+        return "✅ LinkedIn post published successfully."
 
     except Exception as e:
         return f"❌ LinkedIn posting failed: {str(e)}"
@@ -70,4 +91,9 @@ def linkedin_poster_tool(post_text: str) -> str:
             driver.quit()
 
 if __name__ == "__main__":
-    print(linkedin_poster_tool("Test post from linkedin_poster_tool"))
+        # Example usage
+    post_data = {
+        "text": "This is a test post from Selenium automation!",
+        "image_path": "src/linkedin_automation/tools/data/ai_post.png"
+    }
+    print(linkedin_poster_tool(post_data))

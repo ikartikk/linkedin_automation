@@ -3,6 +3,7 @@ find_trends_task:
     Search the web for the latest trending blogs, news, or articles on Generative AI or Artificial Intelligence.
     Focus on identifying topics that are currently being widely discussed, such as breakthroughs,
     controversies, or impactful applications of AI in real-world industries.
+    Don't choose a topic of business side of the field but rather technical advancements.
     Your role is not just to list articles, but to explain why a topic is trending and why it
     could be interesting to a LinkedIn audience.
   expected_output: >
@@ -17,6 +18,8 @@ research_topic_task:
     - Supporting statistics or research findings
     - Real-world examples or case studies
     - Any expert quotes or notable opinions (if available)
+    - You may use the web search tool, but LIMIT yourself to a maximum of 5 searches only. 
+    Use the information from those searches efficiently.
     The goal is to provide enough context so the LinkedIn post is credible, informative, and engaging.
   expected_output: >
     A bullet-point list of 5–7 key details about the chosen AI topic, including any stats, examples, or references.
@@ -39,16 +42,25 @@ summarize_post_task:
   agent: summarizer
 
 
-# generate_image_task:
-#   description: >
-#     Generate a high-quality, visually appealing image related to the chosen AI topic.
-#   expected_output: >
-#     A local file path to the generated image (e.g., './ai_post.png').
-#   agent: image_generator
+generate_image_task:
+  description: >
+    Based on the finalized LinkedIn post text, generate a visually appealing image
+    that represents the main idea. 
+    The post text will be provided to you as context. 
+    Use it to guide the imagery and generate a professional image because this will be used as a linkedin poster.
+  expected_output: >
+    A local file path to the generated image (e.g., 'src/linkedin_automation/tools/data/ai_post.png').
+  agent: image_generator
 
 post_on_linkedin_task:
   description: >
-    Use Selenium to log in to LinkedIn and create a new post with the generated text and image.
+    Combine the LinkedIn post text and the generated image path into a dictionary:
+    {
+      "text": "POST_TEXT",
+      "image_path": "src/linkedin_automation/tools/data/ai_post.png"
+    }
+    Then pass this dict to the LinkedIn poster tool.
   expected_output: >
     Confirmation message that the LinkedIn post was successfully published.
   agent: linkedin_poster
+

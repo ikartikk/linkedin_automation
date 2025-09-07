@@ -1,35 +1,40 @@
-import requests
-import os
 from crewai.tools import tool
+from google import genai
+from google.genai import types
+from PIL import Image
+from io import BytesIO
+import os
+from dotenv import load_dotenv
 
-STABLE_DIFFUSION_API = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
+load_dotenv()
 
 @tool("image_generator_tool")
 def image_generator_tool(prompt: str) -> str:
     """
-    Generate an AI image using Stability AI (Stable Diffusion).
-    Requires STABILITY_API_KEY in environment variables.
+    Generate an image using Google's Gemini multimodal model.
+    Requires GEMINI_API_KEY in environment variables.
     """
-    api_key = os.getenv("STABILITY_API_KEY")
-    if not api_key:
-        return "Error: STABILITY_API_KEY not set in environment."
+    try:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            return "Error: GEMINI_API_KEY not set in environment."
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/json"
-    }
+        client = genai.Client(api_key=api_key)
 
-    files = {
-        "prompt": (None, prompt),
-        "output_format": (None, "png")
-    }
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-image-preview",
+            contents=[prompt],
+        )
 
-    response = requests.post(STABLE_DIFFUSION_API, headers=headers, files=files)
+        # Loop through parts, check for image data
+        for part in response.candidates[0].content.parts:
+            if getattr(part, "inline_data", None) is not None:
+                image = Image.open(BytesIO(part.inline_data.data))
+                image_path = "src/linkedin_automation/tools/data/ai_post.png"
+                image.save(image_path)
+                return image_path
 
-    if response.status_code == 200:
-        image_path = "./ai_post.png"
-        with open(image_path, "wb") as f:
-            f.write(response.content)
-        return image_path
-    else:
-        return f"Image generation failed: {response.text}"
+        return "Error: No image returned from Gemini."
+
+    except Exception as e:
+        return f"❌ Gemini image generation failed: {str(e)}"

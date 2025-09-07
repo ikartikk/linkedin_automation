@@ -9,12 +9,10 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 
 
-#from tools.image_generator_tool import image_generator_tool
+from tools.image_generator_tool import image_generator_tool
 from tools.linkedin_poster_tool import linkedin_poster_tool
 
 load_dotenv()
-
-# Configure Gemini
 os.getenv("GEMINI_API_KEY")
 
 from crewai import LLM
@@ -23,6 +21,9 @@ llm = LLM(
     model="gemini/gemini-2.5-flash",
     temperature=0.7,
 )
+
+llm_image = LLM(
+    model="gemini/gemini-2.5-flash-image-preview")
 
 # Tools
 search_tool = SerperDevTool()
@@ -62,13 +63,14 @@ class LinkedinAutomationCrew:
             verbose=True
         )
     
-    # @agent
-    # def image_generator(self) -> Agent:
-    #     return Agent(
-    #         config=self.agents_config['image_generator'], # type: ignore[index]
-    #         verbose=True,
-    #         tools=[image_generator_tool]
-    #     )
+    @agent
+    def image_generator(self) -> Agent:
+        return Agent(
+            config=self.agents_config['image_generator'], # type: ignore[index]
+            verbose=True,
+            tools=[image_generator_tool],
+            llm=llm_image
+        )
 
     @agent
     def linkedin_poster(self) -> Agent:
@@ -98,11 +100,11 @@ class LinkedinAutomationCrew:
             config=self.tasks_config['summarize_post_task'] # type: ignore[index]
         )
     
-    # @task
-    # def generate_image_task(self) -> Task:
-    #     return Task(
-    #         config=self.tasks_config['generate_image_task'] # type: ignore[index]
-    #     )
+    @task
+    def generate_image_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['generate_image_task'] # type: ignore[index]
+        )
     
     @task
     def post_on_linkedin_task(self) -> Task:
@@ -118,7 +120,7 @@ class LinkedinAutomationCrew:
         process=Process.sequential,
         tools={
             "serper": search_tool,
-            #"image_generator_tool": image_generator_tool,
+            "image_generator_tool": image_generator_tool,
             "linkedin_poster_tool": linkedin_poster_tool
         },
         llm=llm)

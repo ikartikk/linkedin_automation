@@ -1,0 +1,36 @@
+find_trends_task:
+  description: >
+    Search the web for trending blogs, news, or articles on Artificial Intelligence.
+    Focus on identifying at least one highly discussed topic today.
+  expected_output: >
+    A summary of one trending AI topic with a URL reference.
+  agent: trend_researcher
+
+research_topic_task:
+  description: >
+    Expand on the trending AI topic by collecting details, examples, and additional perspectives from the web.
+  expected_output: >
+    A detailed collection of information (bullet points) about the chosen AI topic.
+  agent: topic_researcher
+
+summarize_post_task:
+  description: >
+    Write a concise LinkedIn-style post based on the research. 
+    Make it professional, engaging, and no more than 4 short paragraphs.
+  expected_output: >
+    A LinkedIn-ready post text.
+  agent: summarizer
+
+# generate_image_task:
+#   description: >
+#     Generate a high-quality, visually appealing image related to the chosen AI topic.
+#   expected_output: >
+#     A local file path to the generated image (e.g., './ai_post.png').
+#   agent: image_generator
+
+post_on_linkedin_task:
+  description: >
+    Use Selenium to log in to LinkedIn and create a new post with the generated text and image.
+  expected_output: >
+    Confirmation message that the LinkedIn post was successfully published.
+  agent: linkedin_poster

@@ -1,0 +1,7 @@
+crewai
+crewai_tools
+google-generativeai
+selenium
+webdriver-manager
+requests
+python-dotenv

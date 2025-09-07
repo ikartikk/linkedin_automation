@@ -1,25 +1,43 @@
 find_trends_task:
   description: >
-    Search the web for trending blogs, news, or articles on Artificial Intelligence.
-    Focus on identifying at least one highly discussed topic today.
+    Search the web for the latest trending blogs, news, or articles on Generative AI or Artificial Intelligence.
+    Focus on identifying topics that are currently being widely discussed, such as breakthroughs,
+    controversies, or impactful applications of AI in real-world industries.
+    Your role is not just to list articles, but to explain why a topic is trending and why it
+    could be interesting to a LinkedIn audience.
   expected_output: >
-    A summary of one trending AI topic with a URL reference.
+    A short summary of ONE trending AI topic, why it is trending, and at least one reference link.
   agent: trend_researcher
 
 research_topic_task:
   description: >
-    Expand on the trending AI topic by collecting details, examples, and additional perspectives from the web.
+    Expand on the selected AI trend by gathering more in-depth information from the web.
+    Look for:
+    - Practical applications
+    - Supporting statistics or research findings
+    - Real-world examples or case studies
+    - Any expert quotes or notable opinions (if available)
+    The goal is to provide enough context so the LinkedIn post is credible, informative, and engaging.
   expected_output: >
-    A detailed collection of information (bullet points) about the chosen AI topic.
+    A bullet-point list of 5–7 key details about the chosen AI topic, including any stats, examples, or references.
   agent: topic_researcher
+
 
 summarize_post_task:
   description: >
-    Write a concise LinkedIn-style post based on the research. 
-    Make it professional, engaging, and no more than 4 short paragraphs.
+    Based on the research, write a LinkedIn-ready post using this structure:
+    1. Hook → Start with a short, attention-grabbing line that sparks curiosity.
+    2. Explanation → Describe the AI topic in simple, easy-to-understand terms.
+    3. Takeaway → Highlight why this development matters for professionals, businesses, or society.
+    4. Call-to-Action → End with a thoughtful question that encourages readers to share opinions.
+    5. Hashtags → Include 3–5 relevant hashtags to increase visibility.
+    6. Heading → Start with a bold heading summarizing the post.
+    Write in a professional but friendly tone, avoiding jargon. The style should encourage engagement
+    and be accessible to both technical and non-technical audiences.
   expected_output: >
-    A LinkedIn-ready post text.
+    A LinkedIn-ready post text under 120 words, written in 1-2 short paragraphs, ending with a question.
   agent: summarizer
+
 
 # generate_image_task:
 #   description: >

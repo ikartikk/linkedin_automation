@@ -23,7 +23,6 @@ llm = LLM(
     model="gemini/gemini-2.5-flash",
     temperature=0.7,
     max_rpm=10,              # Add rate limiting
-    cache=True,              # Enable caching for better performance
     respect_context_window=True  # Prevent token limit issues
 )
 

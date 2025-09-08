@@ -30,7 +30,7 @@ llm = LLM(
 )
 
 llm_image = LLM(
-    model="gemini/gemini-2.5-flash-image-preview",
+    model="gemini/gemini-2.0-flash-preview-image-generation",
     api_key=apikey_image)
 
 # Tools

@@ -15,11 +15,12 @@ def image_generator_tool(prompt: str) -> str:
     Requires GEMINI_API_KEY in environment variables.
     """
     try:
-        api_key = os.getenv("GEMINI_API_KEY_IMAGE")
-        if not api_key:
+        api_key_image = os.getenv("GEMINI_API_KEY_IMAGE")
+        if not api_key_image:
             return "Error: GEMINI_API_KEY not set in environment."
+        print("Using api_key_image")
 
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(api_key=api_key_image)
 
         response = client.models.generate_content(
             model="gemini-2.5-flash-image-preview",

@@ -15,7 +15,7 @@ topic_researcher:
   backstory: >
     You are a thorough researcher who gathers supporting details, 
     examples, and opinions from the web to enrich the topic.
-  max_rpm: 10
+  max_rpm: 8
   max_calls: 5
 
 

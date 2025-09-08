@@ -25,7 +25,7 @@ research_topic_task:
     Expert insights or community opinions - Notable perspectives from researchers, developers, or practitioners
     Learning prerequisites or skill requirements - What background knowledge is needed
     Tools, libraries, or platforms - Specific resources professionals can use to learn or implement
-    Web Search Limitations: Maximum of 5 searches only. Use each search strategically to gather the most valuable educational content.
+    Web Search Limitations: Maximum of 4 searches only. Use each search strategically to gather the most valuable educational content.
   expected_output: >
     A structured list of 6–8 key educational details about the chosen AI/ML topic, formatted as:
     Learning Point/Concept: Brief explanation with practical context

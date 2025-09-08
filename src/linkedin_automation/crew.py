@@ -15,31 +15,20 @@ from tools.linkedin_poster_tool import linkedin_poster_tool
 
 load_dotenv()
 os.getenv("GEMINI_API_KEY")
-os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY", "")
+
 from crewai import LLM
 
 
-CALLS = 10
-PERIOD = 60
+llm = LLM(
+    model="gemini/gemini-2.5-flash",
+    temperature=0.7,
+    max_rpm=10,              # Add rate limiting
+    cache=True,              # Enable caching for better performance
+    respect_context_window=True  # Prevent token limit issues
+)
 
-_base_llm = LLM(model="gemini/gemini-2.5-flash", temperature=0.7)
-
-@sleep_and_retry
-@limits(calls=CALLS, period=PERIOD)
-def _rate_limited_invoke(prompt: str, **kwargs):
-    """Rate-limited wrapper around LLM calls."""
-    return _base_llm.invoke(prompt, **kwargs)
-
-# Create a proxy-like class so agents can still use llm.invoke()
-class RateLimitedLLM:
-    def invoke(self, prompt, **kwargs):
-        return _rate_limited_invoke(prompt, **kwargs)
-
-# Shared rate-limited instance
-llm = RateLimitedLLM()
-
-# Non-rate-limited image model
-llm_image = LLM(model="gemini/gemini-2.5-flash-image-preview")
+llm_image = LLM(
+    model="gemini/gemini-2.5-flash-image-preview")
 
 # Tools
 search_tool = SerperDevTool()

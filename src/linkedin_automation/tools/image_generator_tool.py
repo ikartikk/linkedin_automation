@@ -15,7 +15,7 @@ def image_generator_tool(prompt: str) -> str:
     Requires GEMINI_API_KEY in environment variables.
     """
     try:
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY_IMAGE")
         if not api_key:
             return "Error: GEMINI_API_KEY not set in environment."
 

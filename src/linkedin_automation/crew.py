@@ -7,6 +7,7 @@ from crewai_tools import SerperDevTool
 from crewai import Agent, Crew, Task, Process
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
+from ratelimit import limits, sleep_and_retry
 
 
 from tools.image_generator_tool import image_generator_tool
@@ -14,16 +15,31 @@ from tools.linkedin_poster_tool import linkedin_poster_tool
 
 load_dotenv()
 os.getenv("GEMINI_API_KEY")
-
+os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY", "")
 from crewai import LLM
 
-llm = LLM(
-    model="gemini/gemini-2.5-flash",
-    temperature=0.7,
-)
 
-llm_image = LLM(
-    model="gemini/gemini-2.5-flash-image-preview")
+CALLS = 10
+PERIOD = 60
+
+_base_llm = LLM(model="gemini/gemini-2.5-flash", temperature=0.7)
+
+@sleep_and_retry
+@limits(calls=CALLS, period=PERIOD)
+def _rate_limited_invoke(prompt: str, **kwargs):
+    """Rate-limited wrapper around LLM calls."""
+    return _base_llm.invoke(prompt, **kwargs)
+
+# Create a proxy-like class so agents can still use llm.invoke()
+class RateLimitedLLM:
+    def invoke(self, prompt, **kwargs):
+        return _rate_limited_invoke(prompt, **kwargs)
+
+# Shared rate-limited instance
+llm = RateLimitedLLM()
+
+# Non-rate-limited image model
+llm_image = LLM(model="gemini/gemini-2.5-flash-image-preview")
 
 # Tools
 search_tool = SerperDevTool()

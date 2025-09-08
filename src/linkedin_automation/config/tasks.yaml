@@ -63,7 +63,7 @@ summarize_post_task:
   expected_output: >
     A complete LinkedIn-ready post (100-130 words) structured as:
 
-    Bold heading (1 line)
+    Heading (1 line)
     Educational content (2-3 short paragraphs with hook, explanation, learning value, and practical application)
     Learning-focused question (1 line encouraging discussion)
     Hashtags (4-6 tags combining technical and learning themes)

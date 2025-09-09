@@ -13,21 +13,19 @@ load_dotenv()
 def image_generator_tool(prompt: str) -> str:
     """
     Generate an image using Google's Gemini multimodal model.
-    Requires GEMINI_API_KEY in environment variables.
+    Requires GEMINI_API_KEY_IMAGE in environment variables.
     """
     try:
         api_key_image = os.getenv("GEMINI_API_KEY_IMAGE")
         if not api_key_image:
             return "Error: GEMINI_API_KEY not set in environment."
         print("Using api_key_image")
-
-        client = genai.Client(api_key=api_key_image)
-
         time.sleep(60)
-
+        
+        client = genai.Client(api_key=api_key_image)
         response = client.models.generate_content(
             model="gemini-2.5-flash-image-preview",
-            contents=[prompt],
+            contents=[prompt]
         )
 
         # Loop through parts, check for image data

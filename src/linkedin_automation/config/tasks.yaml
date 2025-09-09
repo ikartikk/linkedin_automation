@@ -72,34 +72,12 @@ summarize_post_task:
 
 generate_image_task:
   description: >
-    reate a professional, educational visual that complements the LinkedIn post content and enhances the learning message. The image should reinforce the educational value and make the AI/ML concept more accessible to viewers.
-    Visual Design Guidelines:
-
-    Professional LinkedIn aesthetic - Clean, modern design suitable for business social media
-    Educational focus - Visual elements that suggest learning, growth, or skill development
-    AI/ML theme representation - Incorporate relevant technical imagery (neural networks, code snippets, data visualization, etc.) in an approachable way
-    Text overlay capability - Design should accommodate key learning points or the post heading if needed
-    Brand-safe colors - Use professional color schemes (blues, teals, purples, or tech-forward gradients)
-    High contrast and readability - Ensure any text elements are clearly visible
-    Aspect ratio - Optimize for LinkedIn's preferred image dimensions (1200x627px recommended)
-
-    Content Inspiration Sources:
-
-    The main AI/ML concept or technology discussed in the post
-    Key learning points or educational themes
-    Technical elements that can be visualized simply (workflows, architectures, data flows)
-    Professional development and growth metaphors
-    Modern tech aesthetic with educational undertones
-
-    Technical Requirements:
-
-    High-resolution output suitable for social media
-    Professional quality that reflects expertise and authority
-    Consistent with educational technology content style
-    Accessible design that works for diverse audiences
+    Based on the finalized LinkedIn post text, generate a visually appealing image which is proffesional
+    that represents the main idea. 
+    The post text will be provided to you as context. 
+    Use it to guide the imagery
   expected_output: >
-    A local file path to the generated image (e.g., 'src/linkedin_automation/tools/data/ai_post.png').
-    The image should enhance the educational message and encourage professional engagement with the learning content.
+    A local file path to the generated image (e.g., './ai_post.png').
   agent: image_generator
 
 post_on_linkedin_task:

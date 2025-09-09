@@ -5,6 +5,7 @@ from PIL import Image
 from io import BytesIO
 import os
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
@@ -21,6 +22,8 @@ def image_generator_tool(prompt: str) -> str:
         print("Using api_key_image")
 
         client = genai.Client(api_key=api_key_image)
+
+        time.sleep(60)
 
         response = client.models.generate_content(
             model="gemini-2.5-flash-image-preview",

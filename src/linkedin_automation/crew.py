@@ -22,7 +22,7 @@ from crewai import LLM
 
 
 llm = LLM(
-    model="gemini/gemini-2.5-flash",
+    model="gemini/gemini-2.5-flash-lite",
     temperature=0.7,
     api_key=apikey_text,
     max_rpm=10,              # Add rate limiting

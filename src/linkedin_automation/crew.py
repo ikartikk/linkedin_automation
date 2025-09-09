@@ -18,6 +18,24 @@ os.getenv("GEMINI_API_KEY")
 os.getenv("GEMINI_API_KEY_IMAGE")
 apikey_text = os.getenv("GEMINI_API_KEY")
 apikey_image = os.getenv("GEMINI_API_KEY_IMAGE")
+
+from crewai import LLM
+
+
+llm = LLM(
+    model="gemini/gemini-2.5-flash-lite",
+    temperature=0.7,
+    api_key=apikey_text,
+    max_rpm=10,              # Add rate limiting
+    respect_context_window=True  # Prevent token limit issues
+)
+
+llm_image = LLM(
+    model="gemini/gemini-2.5-flash-image-preview",
+    api_key=apikey_image,
+    max_rpm = 10,
+    respect_context_window = True
+)
  
 # Tools
 search_tool = SerperDevTool()

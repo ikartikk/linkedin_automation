@@ -14,6 +14,8 @@ from tools.image_generator_tool import image_generator_tool
 from tools.linkedin_poster_tool import linkedin_poster_tool
 
 load_dotenv()
+os.getenv("GEMINI_API_KEY")
+os.getenv("GEMINI_API_KEY_IMAGE")
 apikey_text = os.getenv("GEMINI_API_KEY")
 apikey_image = os.getenv("GEMINI_API_KEY_IMAGE")
 
@@ -30,7 +32,7 @@ llm = LLM(
 )
 
 llm_image = LLM(
-    model="gemini/gemini-2.0-flash-preview-image-generation",
+    model="gemini/gemini-2.5-flash-preview-image",
     api_key=apikey_image)
 
 # Tools

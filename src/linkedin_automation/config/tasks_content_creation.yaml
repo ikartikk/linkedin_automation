@@ -1,0 +1,69 @@
+find_trends_task:
+  description: >
+    Search the web for the latest educational and technical content around Generative AI, Machine Learning, and Artificial Intelligence technologies. Focus on identifying:
+    New AI/ML technologies, frameworks, or tools that professionals should know about
+    Technical tutorials, guides, or educational resources that can help the audience learn
+    Emerging techniques, methodologies, or research findings with practical applications
+    Developer tools, libraries, or platforms that are gaining traction in the AI community
+    Educational content that breaks down complex AI concepts for professional audiences
+    The goal is to find content that adds educational value and helps LinkedIn professionals stay updated with the rapidly evolving AI/ML landscape. Prioritize content that teaches something new or provides practical insights rather than general news or business-focused articles.
+  expected_output: >
+    A concise summary of ONE educational AI/ML topic or technology, including:
+    What the technology/concept is and why it matters
+    Key learning points or practical applications
+    Why this knowledge would be valuable for AI/ML professionals
+    At least one reference link to the educational resource.
+  agent: trend_researcher
+
+research_topic_task:
+  description: >
+    Expand on the selected AI/ML educational topic by gathering comprehensive, in-depth information from the web. Focus on collecting educational and practical details that will help professionals understand and apply the technology. Look for:
+    Technical implementation details - How to get started, setup guides, or key concepts to understand
+    Practical learning resources - Tutorials, documentation, code examples, or hands-on guides
+    Real-world use cases and applications - Specific examples of how this technology is being used in practice
+    Performance metrics or benchmarks - Quantitative data showing effectiveness or improvements
+    Expert insights or community opinions - Notable perspectives from researchers, developers, or practitioners
+    Learning prerequisites or skill requirements - What background knowledge is needed
+    Tools, libraries, or platforms - Specific resources professionals can use to learn or implement
+  expected_output: >
+    A structured list of 6–8 key educational details about the chosen AI/ML topic, formatted as:
+    Learning Point/Concept: Brief explanation with practical context
+    Implementation Detail: Technical specifics or how-to information
+    Use Case Example: Real-world application with specific details
+    Resource/Tool: Specific learning materials or implementation tools
+    Include relevant statistics, benchmarks, or quantitative data where available
+    Reference links for further learning
+  constraints: >
+    - You may call the search tool at most 3 times.
+    - You must generate your response in as few LLM calls as possible.
+    - Avoid unnecessary retries or re-asking the same question.
+  agent: topic_researcher
+
+
+summarize_post_task:
+  description: >
+    Transform the researched AI/ML educational content into an engaging, learning-focused LinkedIn post. Structure the post to maximize educational value and professional engagement using this framework:
+
+    Educational Hook → Start with an intriguing question or surprising fact that highlights what professionals can learn
+    Clear Explanation → Break down the AI/ML concept, technology, or technique in accessible terms that both technical and non-technical professionals can understand
+    Learning Value → Explain what skills, knowledge, or capabilities professionals can gain from understanding this topic
+    Practical Application → Share specific ways readers can apply this knowledge or where they might encounter this technology
+    Learning Call-to-Action → End with a question that encourages knowledge sharing, experiences, or learning discussion
+    Strategic Hashtags → Include 4–6 relevant hashtags combining technical terms and professional learning themes
+    Compelling Heading → Create a bold, educational headline that promises learning value
+
+    Writing Guidelines:
+
+    Use a professional yet approachable tone that encourages learning
+    Make complex concepts digestible for diverse professional backgrounds
+    Focus on "what you can learn" and "how this helps you grow" rather than just "what's trending"
+    Include actionable insights or next steps for readers
+    Always include 1-2 reference links to credible sources, tutorials, or learning resources mentioned in the research
+    Encourage knowledge sharing and professional development discussions
+  expected_output: >
+    A complete LinkedIn-ready post (100-130 words) structured as:
+    Heading (1 line) without ** in heading
+    Educational content (2-3 short paragraphs with hook, explanation, learning value, and practical application)
+    Learning-focused question (1 line encouraging discussion)
+    Hashtags (4-6 tags combining technical and learning themes)
+  agent: summarizer

@@ -8,34 +8,46 @@ from crewai import Agent, Crew, Task, Process
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 from ratelimit import limits, sleep_and_retry
-
+import time
 
 from tools.image_generator_tool import image_generator_tool
 from tools.linkedin_poster_tool import linkedin_poster_tool
 
 load_dotenv()
-os.getenv("GEMINI_API_KEY")
-os.getenv("GEMINI_API_KEY_IMAGE")
-apikey_text = os.getenv("GEMINI_API_KEY")
-apikey_image = os.getenv("GEMINI_API_KEY_IMAGE")
+text_key = os.getenv("GEMINI_API_KEY_TEXT")
+image_key = os.getenv("GEMINI_API_KEY_IMAGE")
 
 from crewai import LLM
 
 
+os.environ["GEMINI_API_KEY"] = text_key
 llm = LLM(
     model="gemini/gemini-2.5-flash-lite",
     temperature=0.7,
-    api_key=apikey_text,
-    max_rpm=10,              # Add rate limiting
-    respect_context_window=True  # Prevent token limit issues
+    max_rpm=5,
+    respect_context_window=True
 )
 
-llm_image = LLM(
-    model="gemini/gemini-2.5-flash-image-preview",
-    api_key=apikey_image,
-    max_rpm = 10,
-    respect_context_window = True
-)
+# For image LLM - you'll need to switch the key when using this
+def get_image_llm():
+    # Temporarily set the image key
+    original_key = os.environ.get("GEMINI_API_KEY")
+    os.environ["GEMINI_API_KEY"] = image_key
+    
+    llm_image = LLM(
+        model="gemini/gemini-2.5-flash-image-preview",
+        max_rpm=5,
+        respect_context_window=True
+    )
+    
+    # Restore original key
+    if original_key:
+        os.environ["GEMINI_API_KEY"] = original_key
+    
+    return llm_image
+
+llm_image = get_image_llm()
+
  
 # Tools
 search_tool = SerperDevTool()

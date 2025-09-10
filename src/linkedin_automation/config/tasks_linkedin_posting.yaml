@@ -1,0 +1,12 @@
+post_on_linkedin_task:
+  description: >
+    Combine the LinkedIn post text and the generated image path into a dictionary:
+    {
+      "text": "POST_TEXT",
+      "image_path": "src/linkedin_automation/tools/data/ai_post.png"
+    }
+    Then pass this dict to the LinkedIn poster tool.
+    try for one time if you face any error while posting stop and do not try again
+  expected_output: >
+    Confirmation message that the LinkedIn post was successfully published.
+  agent: linkedin_poster

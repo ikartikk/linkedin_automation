@@ -7,13 +7,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-Gemini_API_KEY = os.getenv("GEMINI_API_KEY")
+Gemini_API_KEY = os.getenv("GEMINI_API_KEY_IMAGE")
 client = genai.Client(api_key= Gemini_API_KEY)
 
 prompt = ("genrate a image of banana in a bowl with 3d art style")
 
 response = client.models.generate_content(
-    model="gemini-2.5-flash-image-preview",
+    model="imagen-3.0-generate-002",
     contents=[prompt],
 )
 

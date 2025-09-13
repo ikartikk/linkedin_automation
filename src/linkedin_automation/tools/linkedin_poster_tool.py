@@ -1,5 +1,8 @@
 import time
 import os
+import random
+import base64
+import pickle
 from crewai.tools import tool
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -10,12 +13,180 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
+def save_session_data(driver, session_file="/tmp/linkedin_session.pkl"):
+    """Save cookies and session data to file"""
+    try:
+        driver.get("https://www.linkedin.com/feed/")
+        time.sleep(2)
+        
+        session_data = {
+            'cookies': driver.get_cookies(),
+            'local_storage': driver.execute_script("return window.localStorage;") or {},
+            'session_storage': driver.execute_script("return window.sessionStorage;") or {},
+            'user_agent': driver.execute_script("return navigator.userAgent;")
+        }
+        
+        with open(session_file, 'wb') as f:
+            pickle.dump(session_data, f)
+        
+        print("✅ Session data saved")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to save session: {e}")
+        return False
+
+def load_session_data(driver, session_file="/tmp/linkedin_session.pkl"):
+    """Load cookies and session data from file"""
+    try:
+        if not os.path.exists(session_file):
+            return False
+        
+        # Check if session file is recent (less than 7 days old)
+        file_age = time.time() - os.path.getmtime(session_file)
+        if file_age > 7 * 24 * 3600:  # 7 days
+            os.remove(session_file)
+            return False
+        
+        with open(session_file, 'rb') as f:
+            session_data = pickle.load(f)
+        
+        # Navigate to LinkedIn first
+        driver.get("https://www.linkedin.com")
+        time.sleep(2)
+        
+        # Load cookies
+        for cookie in session_data['cookies']:
+            try:
+                driver.add_cookie(cookie)
+            except Exception:
+                continue
+        
+        # Load localStorage if available
+        if session_data.get('local_storage'):
+            for key, value in session_data['local_storage'].items():
+                try:
+                    driver.execute_script(f"window.localStorage.setItem('{key}', '{value}');")
+                except Exception:
+                    continue
+        
+        print("✅ Session data loaded")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to load session: {e}")
+        return False
+
+def decode_session_from_github():
+    """Decode session from GitHub secret"""
+    try:
+        session_data_b64 = os.getenv("LINKEDIN_SESSION_DATA")
+        if not session_data_b64:
+            return False
+        
+        session_bytes = base64.b64decode(session_data_b64)
+        session_file = "/tmp/linkedin_session.pkl"
+        
+        with open(session_file, 'wb') as f:
+            f.write(session_bytes)
+        
+        print("✅ Session decoded from GitHub secrets")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to decode session: {e}")
+        return False
+
+def human_like_typing(element, text, min_delay=0.05, max_delay=0.15):
+    """Type text with human-like delays"""
+    element.clear()
+    for char in text:
+        element.send_keys(char)
+        time.sleep(random.uniform(min_delay, max_delay))
+
+def linkedin_login_with_session(driver, linkedin_email, linkedin_password):
+    """Login with session persistence"""
+    wait = WebDriverWait(driver, 20)
+    
+    # If running in GitHub Actions, decode session from secrets
+    if os.getenv("GITHUB_ACTIONS"):
+        print("🔧 Running in GitHub Actions, loading session...")
+        decode_session_from_github()
+    
+    # Try to load existing session first
+    if load_session_data(driver):
+        print("🔄 Testing saved session...")
+        driver.get("https://www.linkedin.com/feed/")
+        print("⏳ LinkedIn feed loading...")
+        time.sleep(5)
+        
+        # Check if we're logged in
+        current_url = driver.current_url
+        if "feed" in current_url or "home" in current_url:
+            try:
+                # Double check by looking for navigation elements
+                wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(@class, 'global-nav__primary-link')]")))
+                print("✅ Session login successful!")
+                return True
+            except TimeoutException:
+                print("⚠️ Session expired, will try fresh login")
+    
+    # Fresh login required
+    print("🔑 Performing fresh login...")
+    driver.get("https://www.linkedin.com/login")
+    time.sleep(random.uniform(3, 6))
+    
+    try:
+        wait.until(EC.presence_of_element_located((By.ID, "username")))
+        
+        # Enter credentials with human-like typing
+        username_field = driver.find_element(By.ID, "username")
+        human_like_typing(username_field, linkedin_email)
+        time.sleep(random.uniform(1, 2))
+        
+        password_field = driver.find_element(By.ID, "password")
+        human_like_typing(password_field, linkedin_password)
+        time.sleep(random.uniform(1, 2))
+        
+        # Click login button
+        try:
+            login_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+            driver.execute_script("arguments[0].click();", login_button)
+        except:
+            password_field.send_keys(Keys.RETURN)
+        
+        print("⏳ Waiting for login...")
+        time.sleep(8)
+        
+        current_url = driver.current_url
+        
+        # Handle post-login scenarios
+        if "challenge" in current_url or "checkpoint" in current_url:
+            print("🛡️ Security challenge detected, waiting...")
+            # Wait for challenge to resolve
+            for i in range(30):  # Wait up to 5 minutes
+                time.sleep(10)
+                current_url = driver.current_url
+                if "feed" in current_url or "home" in current_url:
+                    print("✅ Challenge resolved!")
+                    save_session_data(driver)
+                    return True
+            return False
+                
+        elif "feed" in current_url or "home" in current_url:
+            print("✅ Login successful!")
+            save_session_data(driver)
+            return True
+        
+        return False
+            
+    except Exception as e:
+        print(f"❌ Login error: {e}")
+        return False
+
 @tool("linkedin_poster_tool")
 def linkedin_poster_tool(post_data: dict) -> str:
     """
-    Automates LinkedIn posting with Selenium (GitHub Actions compatible).
+    Automates LinkedIn posting with session persistence.
     Expects input as a dict: {"text": "..."}.
-    Requires LINKEDIN_EMAIL and LINKEDIN_PASSWORD in environment variables.
+    Requires LINKEDIN_EMAIL, LINKEDIN_PASSWORD, and LINKEDIN_SESSION_DATA in environment.
     """
     driver = None
     
@@ -24,286 +195,136 @@ def linkedin_poster_tool(post_data: dict) -> str:
         linkedin_password = os.getenv("LINKEDIN_PASSWORD")
         
         if not linkedin_email or not linkedin_password:
-            return "Error: Please set LINKEDIN_EMAIL and LINKEDIN_PASSWORD in environment."
+            return "❌ Error: Please set LINKEDIN_EMAIL and LINKEDIN_PASSWORD in environment."
         
         if not isinstance(post_data, dict) or "text" not in post_data:
-            return "Error: post_data must be a dict with at least a 'text' key."
+            return "❌ Error: post_data must be a dict with at least a 'text' key."
         
         post_text = post_data.get("text", "")
         
-        # ✅ GitHub Actions compatible Chrome setup
+        # Chrome setup for GitHub Actions
         chrome_options = Options()
-        chrome_options.add_argument("--start-maximized")
-        # Reuse Chrome profile to avoid re-login each time
-        chrome_options.add_argument(r"user-data-dir=/tmp/chrome_profile")
-        chrome_options.add_argument("--headless=new")
+        #chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+        chrome_options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        
+        # Profile directory
+        profile_dir = "/tmp/chrome_profile" if os.getenv("GITHUB_ACTIONS") else "./chrome_profile"
+        chrome_options.add_argument(f"--user-data-dir={profile_dir}")
+        
         driver = webdriver.Chrome(service=Service(), options=chrome_options)
-
-        # Set up explicit waits
-        wait = WebDriverWait(driver, 20)
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
-        # Open LinkedIn login
-        print("Opening LinkedIn login page...")
-        driver.get("https://www.linkedin.com/login")
+        wait = WebDriverWait(driver, 30)
         
-        # Wait for and check if we need to login
-        try:
-            wait.until(EC.presence_of_element_located((By.ID, "username")))
-            
-            if "login" in driver.current_url:
-                print("Logging in...")
-                username_field = driver.find_element(By.ID, "username")
-                username_field.clear()
-                username_field.send_keys(linkedin_email)
-                
-                password_field = driver.find_element(By.ID, "password")
-                password_field.clear()
-                password_field.send_keys(linkedin_password)
-                password_field.send_keys(Keys.RETURN)
-                
-                # Wait for login to complete
-                wait.until(lambda d: "login" not in d.current_url or "challenge" in d.current_url)
-                
-                # Handle potential CAPTCHA or verification
-                if "challenge" in driver.current_url:
-                    return "Error: LinkedIn requires additional verification. Please login manually first."
-                    
-        except TimeoutException:
-            print("Already logged in or login page didn't load properly")
+        # Login with session persistence
+        if not linkedin_login_with_session(driver, linkedin_email, linkedin_password):
+            return "❌ Error: Failed to login to LinkedIn."
         
-        # Navigate to feed
-        print("Navigating to LinkedIn feed...")
-        driver.get("https://www.linkedin.com/feed/")
+        # Navigate to feed if needed
+        current_url = driver.current_url
+        if "feed" not in current_url:
+            driver.get("https://www.linkedin.com/feed/")
+            time.sleep(5)
         
-        # Wait for feed to load and find the "Start a post" button
-        print("Looking for 'Start a post' button...")
-        try:
-            # Try multiple possible selectors for the start post button
-            start_post_selectors = [
-                "//button//span[contains(text(), 'Start a post')]",
-                "//button//strong[text()='Start a post']",
-                "//div[contains(@class, 'share-box-feed-entry__trigger')]",
-                "//button[contains(@class, 'share-box-feed-entry__trigger')]",
-                "//span[text()='Start a post']/ancestor::button",
-                "[data-test-id='share-box-trigger']"
-            ]
-            
-            start_post = None
-            for selector in start_post_selectors:
-                try:
-                    if selector.startswith("//"):
-                        start_post = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                    else:
-                        start_post = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, selector)))
-                    print(f"Found start post button with selector: {selector}")
-                    break
-                except TimeoutException:
-                    continue
-            
-            if not start_post:
-                # Fallback: look for any clickable element that might be the post trigger
-                print("Trying fallback selectors...")
-                fallback_selectors = [
-                    "//div[contains(text(), 'Start a post')]",
-                    "//div[contains(@class, 'share-box')]//button"
-                ]
-                for selector in fallback_selectors:
-                    try:
-                        start_post = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                        break
-                    except TimeoutException:
-                        continue
-            
-            if not start_post:
-                return "Error: Could not find 'Start a post' button. LinkedIn layout may have changed."
-            
-            # Click the start post button
-            driver.execute_script("arguments[0].click();", start_post)
-            print("Clicked 'Start a post' button")
-            
-        except TimeoutException:
-            return "Error: Timeout waiting for 'Start a post' button to appear."
+        # Find "Start a post" button
+        print("🔍 Looking for 'Start a post' button...")
+        start_post_selectors = [
+            "//button//span[contains(text(), 'Start a post')]",
+            "//button//strong[text()='Start a post']",
+            "//div[contains(@class, 'share-box-feed-entry__trigger')]",
+            "//button[contains(@class, 'share-box-feed-entry__trigger')]",
+            "//span[text()='Start a post']/ancestor::button"
+        ]
         
-        # Wait for post composer to open
-        print("Waiting for post composer...")
-        try:
-            post_box_selectors = [
-                "//div[contains(@class,'ql-editor')]",
-                "//div[@role='textbox']",
-                "//div[contains(@class, 'editor-content')]",
-                "[data-placeholder*='share']"
-            ]
-            
-            post_box = None
-            for selector in post_box_selectors:
-                try:
-                    if selector.startswith("//"):
-                        post_box = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                    else:
-                        post_box = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, selector)))
-                    break
-                except TimeoutException:
-                    continue
-            
-            if not post_box:
-                return "Error: Could not find post text box."
-            
-            # Clear any existing text and enter new text
-            post_box.clear()
-            post_box.click()
-            post_box.send_keys(post_text)
-            print("Entered post text")
-            
-        except TimeoutException:
-            return "Error: Timeout waiting for post composer to open."
+        start_post = None
+        for selector in start_post_selectors:
+            try:
+                start_post = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
+                break
+            except TimeoutException:
+                continue
         
-        # Wait a moment for text to be entered
+        if not start_post:
+            return "❌ Error: Could not find 'Start a post' button."
+        
+        driver.execute_script("arguments[0].click();", start_post)
+        print("✅ Clicked 'Start a post' button")
+        time.sleep(3)
+        
+        # Find post composer
+        print("✏️ Looking for post composer...")
+        post_box_selectors = [
+            "//div[contains(@class,'ql-editor')]",
+            "//div[@role='textbox']",
+            "//div[contains(@class, 'editor-content')]",
+            "//div[@contenteditable='true']"
+        ]
+        
+        post_box = None
+        for selector in post_box_selectors:
+            try:
+                post_box = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
+                break
+            except TimeoutException:
+                continue
+        
+        if not post_box:
+            return "❌ Error: Could not find post text box."
+        
+        # Enter text
+        post_box.click()
+        time.sleep(1)
+        post_box.send_keys(Keys.CONTROL + "a")
+        time.sleep(0.5)
+        human_like_typing(post_box, post_text, 0.02, 0.08)
+        print("✅ Entered post text")
         time.sleep(2)
         
         # Find and click post button
-        print("Looking for Post button...")
-        try:
-            post_button_selectors = [
-                "//button[contains(@class,'share-actions__primary-action')]//span[text()='Post']",
-                "//button//span[text()='Post']",
-                "//button[contains(@class, 'share-actions__primary-action')]",
-                "[data-test-id='share-post-button']"
-            ]
-            
-            post_button = None
-            for selector in post_button_selectors:
-                try:
-                    if selector.startswith("//"):
-                        post_button = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                    else:
-                        post_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, selector)))
-                    break
-                except TimeoutException:
-                    continue
-            
-            if not post_button:
-                return "Error: Could not find Post button."
-            
-            # Click post button
-            driver.execute_script("arguments[0].click();", post_button)
-            print("Clicked Post button")
-            
-            # Wait for post to be published
-            time.sleep(5)
-            
-            return "✅ Successfully posted to LinkedIn!"
-            
-        except TimeoutException:
-            return "Error: Timeout waiting for Post button."
-            
+        print("📤 Looking for Post button...")
+        post_button_selectors = [
+            "//button[contains(@class,'share-actions__primary-action')]//span[text()='Post']",
+            "//button//span[text()='Post']",
+            "//button[contains(@class, 'share-actions__primary-action')]",
+            "//button[contains(@class, 'artdeco-button--primary')][contains(.,'Post')]"
+        ]
+        
+        post_button = None
+        for selector in post_button_selectors:
+            try:
+                post_button = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
+                break
+            except TimeoutException:
+                continue
+        
+        if not post_button:
+            return "❌ Error: Could not find Post button."
+        
+        driver.execute_script("arguments[0].click();", post_button)
+        print("✅ Clicked Post button")
+        time.sleep(8)
+        
+        return "✅ Successfully posted to LinkedIn!"
+        
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"❌ Error: {str(e)}"
         
     finally:
         if driver:
+            # Save session before closing
+            try:
+                current_url = driver.current_url
+                if "linkedin.com" in current_url and "login" not in current_url:
+                    save_session_data(driver)
+            except:
+                pass
             driver.quit()
-            print("Browser closed")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# import time
-# import os
-# from crewai.tools import tool
-# from selenium import webdriver
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.common.keys import Keys
-# from selenium.webdriver.chrome.service import Service
-# from selenium.webdriver.chrome.options import Options
-
-# @tool("linkedin_poster_tool")
-# def linkedin_poster_tool(post_data: dict) -> str:
-#     """
-#     Automates LinkedIn posting with Selenium (Chrome version).
-#     Expects input as a dict: {"text": "..."}.
-#     Requires LINKEDIN_EMAIL and LINKEDIN_PASSWORD in environment variables.
-#     """
-#     driver = None
-#     linkedin_email = os.getenv("LINKEDIN_EMAIL")
-#     linkedin_password = os.getenv("LINKEDIN_PASSWORD")
-#     if not linkedin_email or not linkedin_password:
-#         return "Error: Please set LINKEDIN_EMAIL and LINKEDIN_PASSWORD in environment."
-    
-#     if not isinstance(post_data, dict) or "text" not in post_data:
-#         return "Error: post_data must be a dict with at least a 'text' key."
-
-#     post_text = post_data.get("text", "")
-#     #image_path = post_data.get("image_path")
-
-#     # ✅ Chrome setup
-#     chrome_options = Options()
-#     chrome_options.add_argument("--start-maximized")
-#     # Reuse Chrome profile to avoid re-login each time
-#     chrome_options.add_argument(r"user-data-dir=/tmp/chrome_profile")
-#     chrome_options.add_argument("--headless=new")
-#     chrome_options.add_argument("--no-sandbox")
-#     chrome_options.add_argument("--disable-dev-shm-usage")
-
-#     driver = webdriver.Chrome(service=Service(), options=chrome_options)
-
-#     # Open LinkedIn login
-#     driver.get("https://www.linkedin.com/login")
-#     time.sleep(3)
-
-#     # If not already logged in, do login
-#     if "login" in driver.current_url:
-#         driver.find_element(By.ID, "username").send_keys(linkedin_email)
-#         driver.find_element(By.ID, "password").send_keys(linkedin_password)
-#         driver.find_element(By.ID, "password").send_keys(Keys.RETURN)
-#         time.sleep(5)
-
-#     # Navigate to feed
-#     driver.get("https://www.linkedin.com/feed/")
-#     time.sleep(5)
-
-#     start_post = driver.find_element(By.XPATH, "//button//strong[text()='Start a post']")
-#     start_post.click()
-#     time.sleep(3)
-
-#     # Enter text
-#     post_box = driver.find_element(By.XPATH, "//div[contains(@class,'ql-editor')]")
-#     post_box.send_keys(post_text)
-#     time.sleep(2)
-
-#     # add_media_btn = driver.find_element(By.XPATH, "//button[@aria-label='Add media']")
-#     # add_media_btn.click()
-#     # time.sleep(2)
-
-#     # # Find file input and send file path
-#     # file_input = driver.find_element(By.XPATH, "//input[@type='file']")
-#     # file_input.send_keys(os.path.abspath(image_path))
-
-#     # # Wait for upload preview
-#     # time.sleep(5)
-
-#     # next_button = driver.find_element(By.XPATH, "//button[@aria-label='Next']")
-#     # next_button.click()
-#     # time.sleep(2)
-
-#     # Post
-#     post_button = driver.find_element(By.XPATH, "//button[contains(@class,'share-actions__primary-action')]//span[text()='Post']")
-#     post_button.click()
-#     time.sleep(10)
-
-
-#     driver.quit()
-            
+            print("🔒 Browser closed")

@@ -15,7 +15,7 @@ topic_researcher:
   backstory: >
     You are a thorough researcher who gathers supporting details, 
     examples, and opinions from the web to enrich the topic.
-  max_rpm: 8
+  max_rpm: 5
   max_calls: 5
 
 
@@ -28,13 +28,13 @@ summarizer:
     You are an expert in transforming technical details into 
     professional and engaging content suitable for LinkedIn.
 
-image_generator:
-  role: >
-    AI Image Creator
-  goal: >
-    Generate an attractive image matching the AI topic to make the LinkedIn post stand out.
-  backstory: >
-    You are a visual storyteller who creates effective images using AI image generation tools.
+# image_generator:
+#   role: >
+#     AI Image Creator
+#   goal: >
+#     Generate an attractive image matching the AI topic to make the LinkedIn post stand out.
+#   backstory: >
+#     You are a visual storyteller who creates effective images using AI image generation tools.
 
 
 linkedin_poster:

@@ -22,7 +22,7 @@ os.environ["GEMINI_API_KEY"] = text_key
 print("gemini key-->", os.getenv("GEMINI_API_KEY"))
 
 llm_text = LLM(
-    model="gemini/gemini-2.5-flash-lite",
+    model="gemini/gemini-2.5-flash",
     temperature=0.7,
     max_rpm=5,
     respect_context_window=True

@@ -69,26 +69,25 @@ summarize_post_task:
   agent: summarizer
 
 
-generate_image_task:
-  description: >
-    Based on the finalized LinkedIn post text, generate a visually appealing image which is proffesional
-    that represents the main idea. 
-    The post text will be provided to you as context. 
-    Use it to guide the imagery
-  expected_output: >
-    A local file path to the generated image (e.g., 'src/linkedin_automation/tools/data/ai_post.png').
-  constraints: >
-    - Only generate one image per task. Do not retry automatically.
-    - You must generate your response in as few LLM calls as possible.
-    - Avoid unnecessary retries or re-asking the same question.
-  agent: image_generator
+# generate_image_task:
+#   description: >
+#     Based on the finalized LinkedIn post text, generate a visually appealing image which is proffesional
+#     that represents the main idea. 
+#     The post text will be provided to you as context. 
+#     Use it to guide the imagery
+#   expected_output: >
+#     A local file path to the generated image (e.g., 'src/linkedin_automation/tools/data/ai_post.png').
+#   constraints: >
+#     - Only generate one image per task. Do not retry automatically.
+#     - You must generate your response in as few LLM calls as possible.
+#     - Avoid unnecessary retries or re-asking the same question.
+#   agent: image_generator
 
 post_on_linkedin_task:
   description: >
     Combine the LinkedIn post text and the generated image path into a dictionary:
     {
-      "text": "POST_TEXT",
-      "image_path": "src/linkedin_automation/tools/data/ai_post.png"
+      "text": "POST_TEXT"
     }
     Then pass this dict to the LinkedIn poster tool.
     try for one time if you face any error while posting stop and do not try again

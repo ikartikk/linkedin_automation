@@ -11,7 +11,7 @@ from selenium.webdriver.chrome.options import Options
 def linkedin_poster_tool(post_data: dict) -> str:
     """
     Automates LinkedIn posting with Selenium (Chrome version).
-    Expects input as a dict: {"text": "...", "image_path": "..."}.
+    Expects input as a dict: {"text": "..."}.
     Requires LINKEDIN_EMAIL and LINKEDIN_PASSWORD in environment variables.
     """
     driver = None
@@ -24,14 +24,14 @@ def linkedin_poster_tool(post_data: dict) -> str:
         return "Error: post_data must be a dict with at least a 'text' key."
 
     post_text = post_data.get("text", "")
-    image_path = post_data.get("image_path")
+    #image_path = post_data.get("image_path")
 
     # ✅ Chrome setup
     chrome_options = Options()
     chrome_options.add_argument("--start-maximized")
     # Reuse Chrome profile to avoid re-login each time
     chrome_options.add_argument(r"user-data-dir=/tmp/chrome_profile")
-    chrome_options.add_argument("--headless=new")
+    #chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
 
@@ -61,20 +61,20 @@ def linkedin_poster_tool(post_data: dict) -> str:
     post_box.send_keys(post_text)
     time.sleep(2)
 
-    add_media_btn = driver.find_element(By.XPATH, "//button[@aria-label='Add media']")
-    add_media_btn.click()
-    time.sleep(2)
+    # add_media_btn = driver.find_element(By.XPATH, "//button[@aria-label='Add media']")
+    # add_media_btn.click()
+    # time.sleep(2)
 
-    # Find file input and send file path
-    file_input = driver.find_element(By.XPATH, "//input[@type='file']")
-    file_input.send_keys(os.path.abspath(image_path))
+    # # Find file input and send file path
+    # file_input = driver.find_element(By.XPATH, "//input[@type='file']")
+    # file_input.send_keys(os.path.abspath(image_path))
 
-    # Wait for upload preview
-    time.sleep(5)
+    # # Wait for upload preview
+    # time.sleep(5)
 
-    next_button = driver.find_element(By.XPATH, "//button[@aria-label='Next']")
-    next_button.click()
-    time.sleep(2)
+    # next_button = driver.find_element(By.XPATH, "//button[@aria-label='Next']")
+    # next_button.click()
+    # time.sleep(2)
 
     # Post
     post_button = driver.find_element(By.XPATH, "//button[contains(@class,'share-actions__primary-action')]//span[text()='Post']")

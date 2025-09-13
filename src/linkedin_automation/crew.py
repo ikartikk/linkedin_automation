@@ -8,46 +8,30 @@ from crewai import Agent, Crew, Task, Process
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 from ratelimit import limits, sleep_and_retry
-import time
 
-from tools.image_generator_tool import image_generator_tool
+
+#from tools.image_generator_tool import image_generator_tool
 from tools.linkedin_poster_tool import linkedin_poster_tool
 
 load_dotenv()
-text_key = os.getenv("GEMINI_API_KEY_TEXT")
-image_key = os.getenv("GEMINI_API_KEY_IMAGE")
+os.getenv("GEMINI_API_KEY")
+os.getenv("HF_TOKEN")
 
 from crewai import LLM
 
 
-os.environ["GEMINI_API_KEY"] = text_key
 llm = LLM(
-    model="gemini/gemini-2.5-flash-lite",
+    model="gemini/gemini-2.5-flash",
     temperature=0.7,
-    max_rpm=5,
-    respect_context_window=True
+    max_rpm=5,              # Add rate limiting
+    respect_context_window=True  # Prevent token limit issues
 )
 
-# For image LLM - you'll need to switch the key when using this
-def get_image_llm():
-    # Temporarily set the image key
-    original_key = os.environ.get("GEMINI_API_KEY")
-    os.environ["GEMINI_API_KEY"] = image_key
-    
-    llm_image = LLM(
-        model="gemini/gemini-2.5-flash-image-preview",
-        max_rpm=5,
-        respect_context_window=True
-    )
-    
-    # Restore original key
-    if original_key:
-        os.environ["GEMINI_API_KEY"] = original_key
-    
-    return llm_image
-
-llm_image = get_image_llm()
-
+# llm_image = LLM(
+#     model="huggingface/black-forest-labs/FLUX.1-schnell",
+#     max_rpm = 10,
+#     respect_context_window = True
+# )
  
 # Tools
 search_tool = SerperDevTool()
@@ -87,14 +71,15 @@ class LinkedinAutomationCrew:
             verbose=True
         )
     
-    @agent
-    def image_generator(self) -> Agent:
-        return Agent(
-            config=self.agents_config['image_generator'], # type: ignore[index]
-            verbose=True,
-            tools=[image_generator_tool],
-            llm=llm_image
-        )
+    # @agent
+    # def image_generator(self) -> Agent:
+    #     return Agent(
+    #         config=self.agents_config['image_generator'], # type: ignore[index]
+    #         llm=llm_image,
+    #         verbose=True,
+    #         #tools=[image_generator_tool],
+            
+    #     )
 
     @agent
     def linkedin_poster(self) -> Agent:
@@ -124,11 +109,11 @@ class LinkedinAutomationCrew:
             config=self.tasks_config['summarize_post_task'] # type: ignore[index]
         )
     
-    @task
-    def generate_image_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['generate_image_task'] # type: ignore[index]
-        )
+    # @task
+    # def generate_image_task(self) -> Task:
+    #     return Task(
+    #         config=self.tasks_config['generate_image_task'] # type: ignore[index]
+    #     )
     
     @task
     def post_on_linkedin_task(self) -> Task:
@@ -144,10 +129,9 @@ class LinkedinAutomationCrew:
         process=Process.sequential,
         tools={
             "serper": search_tool,
-            "image_generator_tool": image_generator_tool,
+            #"image_generator_tool": image_generator_tool,
             "linkedin_poster_tool": linkedin_poster_tool
-        },
-        llm=llm)
+        })
 
 def create_crew():
     return LinkedinAutomationCrew().crew()

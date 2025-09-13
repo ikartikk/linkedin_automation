@@ -33,26 +33,15 @@ def linkedin_poster_tool(post_data: dict) -> str:
         
         # ✅ GitHub Actions compatible Chrome setup
         chrome_options = Options()
+        chrome_options.add_argument("--start-maximized")
+        # Reuse Chrome profile to avoid re-login each time
+        chrome_options.add_argument(r"user-data-dir=/tmp/chrome_profile")
         chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--disable-plugins")
-        chrome_options.add_argument("--disable-images")  # Faster loading
-        chrome_options.add_argument("--disable-javascript")  # We'll enable it selectively
-        chrome_options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        
-        # Use /tmp for profile in GitHub Actions
-        profile_dir = "/tmp/chrome_profile" if os.getenv("GITHUB_ACTIONS") else "./chrome_profile"
-        chrome_options.add_argument(f"--user-data-dir={profile_dir}")
-        
-        # Re-enable JavaScript for LinkedIn
-        chrome_options.add_argument("--enable-javascript")
-        
+
         driver = webdriver.Chrome(service=Service(), options=chrome_options)
-        
+
         # Set up explicit waits
         wait = WebDriverWait(driver, 20)
         

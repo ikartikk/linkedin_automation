@@ -31,7 +31,7 @@ def linkedin_poster_tool(post_data: dict) -> str:
     chrome_options.add_argument("--start-maximized")
     # Reuse Chrome profile to avoid re-login each time
     chrome_options.add_argument(r"user-data-dir=/tmp/chrome_profile")
-    #chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
 

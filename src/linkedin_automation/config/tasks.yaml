@@ -85,7 +85,7 @@ summarize_post_task:
 
 post_on_linkedin_task:
   description: >
-    Combine the LinkedIn post text and the generated image path into a dictionary:
+    Combine the LinkedIn post text into a dictionary:
     {
       "text": "POST_TEXT"
     }

@@ -214,7 +214,7 @@ def linkedin_poster_tool(post_data: dict) -> str:
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         chrome_options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        
+        os.getenv("GITHUB_ACTIONS") = True
         # Profile directory
         profile_dir = "/tmp/chrome_profile" if os.getenv("GITHUB_ACTIONS") else "./chrome_profile"
         chrome_options.add_argument(f"--user-data-dir={profile_dir}")
